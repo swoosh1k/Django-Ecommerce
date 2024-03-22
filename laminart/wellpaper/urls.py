@@ -9,10 +9,10 @@ urlpatterns = [
     path('wellpaper/login/', UserLogin.as_view(), name = 'login'),
     path('register/', UserRegister.as_view(), name = 'register'),
     path('logout/', LogoutView.as_view(), name  = 'logout'),
-    path('add_to_cart/<int:pk>/', add_to_cart, name = 'add_to_cart'),
     path('cart/', user_cart , name = 'cart'),
     path('create_order/', create_order, name = 'create_order'),
-    path('delete_item/<int:pk>/', delete_item, name = 'delete_item')
+    path('add_product_in_cart/', add_product_in_cart, name = 'add_product_in_cart'),
+    path('update_cart/', update_cart, name='update_cart'),
 ]
 
 

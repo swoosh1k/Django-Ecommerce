@@ -3,7 +3,7 @@ import json
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import CreateView
 
@@ -14,9 +14,10 @@ from .forms import *
 def index(request):
     user = request.user
     products = Product.objects.all()
-    products_in_cart = sum([cart.quantity for cart in Cart.objects.filter(user = request.user)])
+    products_count_in_cart = sum([cart.quantity for cart in Cart.objects.filter(user = request.user)])
     user_products = [cart.product.id for cart in Cart.objects.filter(user = request.user)]
-    context = {'products': products, 'user': user, 'title': 'Главная страница', 'user_products': user_products, 'products_in_cart': products_in_cart}
+    products_on_page = products.count()
+    context = {'products': products, 'user': user, 'title': 'Главная страница', 'user_products': user_products, 'products_in_cart': products_count_in_cart, 'products_on_page': products_on_page}
     return render(request, 'wellpaper/index.html', context = context )
 
 
@@ -80,3 +81,32 @@ def delete_item(request, pk):
     cart = Cart.objects.get(user = request.user, product_id = pk)
     cart.delete()
     return HttpResponseRedirect(request.META['HTTP_REFERER'])
+
+
+
+def add_product_in_cart(request):
+    product = get_object_or_404(Product, id = request.POST.get('product_id'))
+    user_products = [cart.product.id for cart in Cart.objects.filter(user = request.user)]
+    if product.id not in user_products:
+        Cart.objects.create(user = request.user, product = product, quantity = 1)
+        info = 'Товар уже в корзине!'
+    else:
+        cart = Cart.objects.get(product = product)
+        cart.delete()
+        info = 'Добавить в корзину'
+    products_in_cart = sum([cart.quantity for cart in Cart.objects.filter(user = request.user)])
+    return JsonResponse({'products_in_cart': products_in_cart, 'info': info})
+
+
+
+
+def update_cart(request):
+    product = Product.objects.get(id = request.POST.get('product_id'))
+    cart = Cart.objects.get(product_id = product.id)
+    cart.quantity = int(request.POST.get('quantity'))
+    cart.save()
+    cart_summ = cart.total_sum()
+    products_in_cart = sum([cart.quantity for cart in Cart.objects.filter(user = request.user)])
+    products_in_cart_all = sum([cart.quantity for cart in Cart.objects.filter(user = request.user)])
+    total_summ = sum([cart.total_sum() for cart in Cart.objects.filter(user = request.user)])
+    return JsonResponse({'cart_summ': cart_summ, 'total_summ': total_summ, 'products_in_cart': products_in_cart, 'products_in_cart_all':products_in_cart_all })

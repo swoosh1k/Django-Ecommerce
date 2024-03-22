@@ -30,7 +30,7 @@
           <li><a href="#" class="nav-link px-2 text-white">Профиль</a></li>
         </ul>
         <form class="d-flex" action = '{% url "cart" %}' method = 'GET'>
-            <button type="submit" class="btn btn-dark">Корзина <i class="fa-solid fa-cart-shopping"><span>{{products_in_cart}}</span></i></button>
+            <button type="submit" class="btn btn-dark">Корзина <i class="fa-solid fa-cart-shopping"><span id = 'products_in_cart_all'>{{products_in_cart}}</span></i></button>
         </form>
 
 
@@ -58,7 +58,7 @@
 	 					<div class="col-md-12 col-lg-8">
 	 						<div class="items">
                                 {% for cart in carts %}
-				 				<div class="product">
+				 				<div class="product" data-product-id="{{cart.product.id}}">
 				 					<div class="row">
 					 					<div class="col-md-3">
 					 						<img class="img-fluid mx-auto d-block image" src="{{cart.product.image.url}}">
@@ -77,11 +77,11 @@
 									 					</div>
 							 						</div>
 							 						<div class="col-md-4 quantity">
-							 							<label >Quantity:</label>
-							 							<input 	type="number" value ="1" max = ' ' class="form-control quantity-input">
+							 							<label >Количество:</label>
+														 <input type="number" value ='{{cart.quantity}}' max="99" min = '1' class="form-control quantity-input">
 							 						</div>
 							 						<div class="col-md-3 price">
-							 							<span>{{cart.total_sum}}</span>
+							 							<span id = "cartsumm_total{{cart.product.id}}">{{cart.total_sum}}</span>
 							 						</div>
 							 					</div>
 							 				</div>
@@ -94,9 +94,9 @@
 			 			<div class="col-md-12 col-lg-4">
 			 				<div class="summary">
 			 					<h3>Итого</h3>
-			 					<div class="summary-item"><span class="text">Количество товаров:</span><span class="price">{{products_in_cart}}</span></div>
+			 					<div class="summary-item"><span class="text">Количество товаров:</span><span class="price" id = 'products_in_cart'>{{products_in_cart}}</span></div>
 			 					<div class="summary-item"><span class="text">Скидка:</span><span class="price">0 byn</button></span></div>
-			 					<div class="summary-item"><span class="text">Итого:</span><span class="price">{{all_cart_sum}} byn</span></div>
+			 					<div class="summary-item"><span class="text">Итого:</span><span class="price" id = 'total_summ'>{{all_cart_sum}} byn</span></div>
 			 					<button type="button" class="btn btn-dark"  data-toggle="modal" data-target="#exampleModal">Оформить заказ</button>
 				 			</div>
 			 			</div>
@@ -136,8 +136,41 @@
         </div>
     </div>
 </div>
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.1/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
+    <!-- Latest compiled JavaScript -->
+<script src="{% static 'js/bootstrap.min.js' %}"></script>
+<script>
+	$(document).ready(function() {
+    $('.quantity-input').change(function() {
+        var newQuantity = $(this).val();
+        var productId = $(this).closest('.product').data('product-id');
+		 if (isNaN(newQuantity) || newQuantity < 1) {
+            newQuantity = 1;
+        } else if (newQuantity > 99) {
+            newQuantity = 99;
+        }
+        $(this).val(newQuantity);
+        $.ajax({
+            type: 'POST',
+            url: "{% url 'update_cart' %}",
+            data: {
+                'product_id': productId,
+                'csrfmiddlewaretoken': "{{ csrf_token }}",
+                'quantity': newQuantity
+            },
+            success: function(response) {
+                $('#cartsumm_total' + productId).text(response['cart_summ']);
+            	$('#total_summ').text(response['total_summ'] + '  byn');
+            	$('#products_in_cart').text(response['products_in_cart']);
+            	$('#products_in_cart_all').text(response['products_in_cart_all']);
+
+            },
+            error: function (rs, e) {
+                        console.log(rs.response)
+                    }
+        });
+    });
+});
+</script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 import json
-
+import random
+from decimal import Decimal
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
@@ -17,7 +18,12 @@ def index(request):
     products_count_in_cart = sum([cart.quantity for cart in Cart.objects.filter(user = request.user)])
     user_products = [cart.product.id for cart in Cart.objects.filter(user = request.user)]
     products_on_page = products.count()
-    context = {'products': products, 'user': user, 'title': 'Главная страница', 'user_products': user_products, 'products_in_cart': products_count_in_cart, 'products_on_page': products_on_page}
+    sizes = Size.objects.all()
+    manufacturers = Manufacturer.objects.all()
+    drawings = Drawing.objects.all()
+    rooms = Room.objects.all()
+    colors = Color.objects.all()
+    context = {'products': products, 'user': user, 'title': 'Главная страница', 'user_products': user_products, 'products_in_cart': products_count_in_cart, 'products_on_page': products_on_page, 'sizes': sizes, 'manufacturers': manufacturers, 'drawings': drawings, 'rooms': rooms, 'colors': colors}
     return render(request, 'wellpaper/index.html', context = context )
 
 
@@ -44,9 +50,6 @@ class UserRegister(CreateView):
 
 
 
-def add_to_cart(request, pk):
-    Cart.objects.create(product = get_object_or_404(Product, id = pk), user = request.user, quantity = 1)
-    return HttpResponseRedirect(request.META['HTTP_REFERER'])
 
 
 
@@ -110,3 +113,82 @@ def update_cart(request):
     products_in_cart_all = sum([cart.quantity for cart in Cart.objects.filter(user = request.user)])
     total_summ = sum([cart.total_sum() for cart in Cart.objects.filter(user = request.user)])
     return JsonResponse({'cart_summ': cart_summ, 'total_summ': total_summ, 'products_in_cart': products_in_cart, 'products_in_cart_all':products_in_cart_all })
+
+
+
+
+def filter_products(request):
+    room = request.GET.getlist('room')
+    if not room:
+        room = Room.objects.all()
+    size = request.GET.getlist('size')
+    if not size:
+        size = Size.objects.all()
+    manufacturer = request.GET.getlist('manufacturer')
+    if not manufacturer:
+        manufacturer = Manufacturer.objects.all()
+    draw = request.GET.getlist('draw')
+    if not draw:
+        draw = Drawing.objects.all()
+    color = request.GET.getlist('color')
+    if not color:
+        color = Color.objects.all()
+    min_number = Decimal(request.GET.get('number1'))
+    max_number = Decimal(request.GET.get('number2'))
+    products = set(Product.objects.filter(price__gte = min_number, price__lte = max_number, color__in = color, drawing__in = draw, room__in = room, size__in = size, manufacturer__in = manufacturer ))
+    products_count_in_cart = sum([cart.quantity for cart in Cart.objects.filter(user=request.user)])
+    user_products = [cart.product.id for cart in Cart.objects.filter(user=request.user)]
+    products_on_page = len(products)
+    manufacturers = Manufacturer.objects.all()
+    drawings = Drawing.objects.all()
+    rooms = Room.objects.all()
+    colors = Color.objects.all()
+    sizes = Size.objects.all()
+    context = {'products': products, 'title': 'Главная страница', 'user_products': user_products, 'products_in_cart': products_count_in_cart, 'products_on_page': products_on_page, 'sizes': sizes, 'manufacturers': manufacturers, 'drawings': drawings, 'rooms': rooms, 'colors': colors,}
+    return render(request, 'wellpaper/index.html', context = context)
+
+
+
+
+
+
+
+
+def about_us(request):
+    products_in_cart = sum([cart.quantity for cart in Cart.objects.filter(user = request.user)])
+    context = {'title': 'О нас', 'products_in_cart': products_in_cart}
+    return render(request, 'wellpaper/aboutus.html', context = context)
+
+
+
+def generate(request):
+    manufacturers = Manufacturer.objects.all()
+    sizes = Size.objects.all()
+    drawings = Drawing.objects.all()
+    rooms = Room.objects.all()
+    colors = Color.objects.all()
+    prices = [12.2, 56.6, 87.79, 32.32, 99.99, 34, 56, 12, 43.43, 65.65, 57, 87.23, 50,97, 34.23, 67.89]
+    images = ['static/images/detskiye.jpg','static/images/sea.jpg', 'static/images/spalnya.jpg', 'static/images/tswetochki.jpg', 'static/images/zelenye.jpg', 'static/images/spalnya1.webp', 'static/images/spalnya3.jpg' ]
+    articles = [984562, 315901, 868389, 345687, 985249, 291683, 234563, 998345, 285198, 198305, 178305, 305489, 434212, 984562, 895436, 764098, 304776, 882956 ]
+    titles = ['Belaya Skazka', 'Detskie v Spalny', 'Cherny Klever', 'Salfetochny Jor', 'Yosemite Park', 'Mark Qwanti', 'Detskiy-lepet', 'Kloy-Merin', 'Bardzo-top', 'Yorik-Pop', 'Erisman']
+    for i in range(1,10):
+        manufacture = random.choice(manufacturers)
+        size = random.choice(sizes)
+        draw = random.choice(drawings)
+        room = random.choice(rooms)
+        color = random.choice(colors)
+        image = random.choice(images)
+        articl = random.choice(articles)
+        price = random.choice(prices)
+        title = random.choice(titles)
+        product = Product.objects.create(manufacturer=manufacture, price=price, brand='Эскидр', title=title,
+                                         image=image, size=size, drawing=draw, articl=articl,
+                                         slug=title, quantity=100)
+        product.room.set(random.sample(list(rooms), k=random.randint(1, 3)))
+        product.color.set(random.sample(list(colors), k=random.randint(1, 3)))
+        product.save()
+
+    return redirect('index')
+
+
+

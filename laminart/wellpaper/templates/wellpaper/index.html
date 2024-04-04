@@ -6,7 +6,7 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>Главная страница</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://kit.fontawesome.com/6aae901a73.js" crossorigin="anonymous"></script>
 
@@ -23,7 +23,7 @@
         <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
           <li><a href="#" class="nav-link px-2 text-secondary">Город Минск, Тимирязева 128/1</a></li>
           <li><a href="{% url 'index' %}" class="nav-link px-2 text-white">Главная</a></li>
-          <li><a href="#" class="nav-link px-2 text-white">О нас</a></li>
+          <li><a href="{% url 'about_us' %}" class="nav-link px-2 text-white">О нас</a></li>
           <li><a href="#" class="nav-link px-2 text-white">Профиль</a></li>
         </ul>
         <form class="d-flex" action = '{% url "cart" %}' method = 'GET'>
@@ -43,6 +43,9 @@
                       </div>
                     </div>
                     <div class="row">
+                     {% if  not products %}
+                        <h1>По вашему фильтру ничего не найдено</h1>
+                     {% endif %}
                     {% for product in products %}
                       <div class="col-6 col-md-6 col-lg-4 mb-3">
                           <div class="card h-100">
@@ -92,95 +95,284 @@
                   </div>
                 </div><div class="col-md-4 order-md-1 col-lg-3 sidebar-filter">
                   <h3 class="mt-0 mb-5">Показано <span class="text-primary">{{products_on_page}}</span> Обоев</h3>
-                  <h6 class="text-uppercase font-weight-bold mb-3">Категории</h6>
+             <form method = 'GET' action = '{% url "filter-products" %}' >
+                  <h6 class="text-uppercase font-weight-bold mb-3">Размер</h6>
+                {% for size in sizes %}
                   <div class="mt-2 mb-2 pl-2">
                     <div class="custom-control custom-checkbox">
-                      <input type="checkbox" class="custom-control-input" id="category-1">
-                      <label class="custom-control-label" for="category-1">Accessories</label>
+                      <input type="checkbox" name = 'size' value = '{{size.id}}' class="custom-control-input" id="category-{{size.id}}">
+                      <label class="custom-control-label" for="category-{{size.id}}">{{size.title}} м</label>
                     </div>
                   </div>
-                  <div class="mt-2 mb-2 pl-2">
-                    <div class="custom-control custom-checkbox">
-                      <input type="checkbox" class="custom-control-input" id="category-2">
-                      <label class="custom-control-label" for="category-2">Coats &amp; Jackets</label>
-                    </div>
-                  </div>
-                  <div class="mt-2 mb-2 pl-2">
-                    <div class="custom-control custom-checkbox">
-                      <input type="checkbox" class="custom-control-input" id="category-3">
-                      <label class="custom-control-label" for="category-3">Hoodies &amp; Sweatshirts</label>
-                    </div>
-                  </div>
-                  <div class="mt-2 mb-2 pl-2">
-                    <div class="custom-control custom-checkbox">
-                      <input type="checkbox" class="custom-control-input" id="category-4">
-                      <label class="custom-control-label" for="category-4">Jeans</label>
-                    </div>
-                  </div>
-                  <div class="mt-2 mb-2 pl-2">
-                    <div class="custom-control custom-checkbox">
-                      <input type="checkbox" class="custom-control-input" id="category-5">
-                      <label class="custom-control-label" for="category-5">Shirts</label>
-                    </div>
-                  </div>
-                  <div class="mt-2 mb-2 pl-2">
-                    <div class="custom-control custom-checkbox">
-                      <input type="checkbox" class="custom-control-input" id="category-6">
-                      <label class="custom-control-label" for="category-6">Underwear</label>
-                    </div>
-                  </div>
+                {% endfor %}
                   <div class="divider mt-5 mb-5 border-bottom border-secondary"></div>
-                  <h6 class="text-uppercase mt-5 mb-3 font-weight-bold">Размер</h6>
+                  <h6 class="text-uppercase mt-5 mb-3 font-weight-bold">Производитель</h6>
+               <div class = 'manufacturer-container' id="manufacturer-checkboxes">
+                {% for manufacturer in manufacturers %}
                   <div class="mt-2 mb-2 pl-2">
                     <div class="custom-control custom-checkbox">
-                      <input type="checkbox" class="custom-control-input" id="filter-size-1">
-                      <label class="custom-control-label" for="filter-size-1">X-Small</label>
+                      <input type="checkbox"  name = 'manufacturer' value = '{{manufacturer.id}}' class="custom-control-input" id="manufacturer-{{manufacturer.id}}">
+                      <label class="custom-control-label" for="manufacturer-{{manufacturer.id}}">{{manufacturer.title}}</label>
                     </div>
                   </div>
+                {% endfor %}
+               </div>
+                <div class="divider mt-5 mb-5 border-bottom border-secondary"></div>
+                  <h6 class="text-uppercase mt-5 mb-3 font-weight-bold">Рисунок</h6>
+                <div class = 'draw-container' id="draw-checkboxes">
+                {% for draw in drawings %}
                   <div class="mt-2 mb-2 pl-2">
                     <div class="custom-control custom-checkbox">
-                      <input type="checkbox" class="custom-control-input" id="filter-size-2">
-                      <label class="custom-control-label" for="filter-size-2">Small</label>
+                      <input type="checkbox" name = 'draw' value = '{{draw.id}}'  class="custom-control-input" id="draw-{{draw.id}}">
+                      <label class="custom-control-label" for="draw-{{draw.id}}">{{draw.title}}</label>
                     </div>
                   </div>
+                {% endfor %}
+                </div>
+                <div class="divider mt-5 mb-5 border-bottom border-secondary"></div>
+                  <h6 class="text-uppercase mt-5 mb-3 font-weight-bold">Цвет</h6>
+                <div class = 'color-container' id="color-checkboxes">
+                {% for color in colors %}
                   <div class="mt-2 mb-2 pl-2">
                     <div class="custom-control custom-checkbox">
-                      <input type="checkbox" class="custom-control-input" id="filter-size-3">
-                      <label class="custom-control-label" for="filter-size-3">Medium</label>
+                      <input type="checkbox" name = 'color' value = '{{color.id}}' class="custom-control-input" id="color-{{color.id}}">
+                      <label class="custom-control-label" for="color-{{color.id}}">{{color.color}}</label>
                     </div>
                   </div>
+                {% endfor %}
+                </div>
+                <div class="divider mt-5 mb-5 border-bottom border-secondary"></div>
+                  <h6 class="text-uppercase mt-5 mb-3 font-weight-bold">Комната</h6>
+               <div class = 'room-container' id = 'room-checkboxes'>
+                {% for room in rooms %}
                   <div class="mt-2 mb-2 pl-2">
                     <div class="custom-control custom-checkbox">
-                      <input type="checkbox" class="custom-control-input" id="filter-size-4">
-                      <label class="custom-control-label" for="filter-size-4">Large</label>
+                      <input type="checkbox"  name = 'room' value = '{{room.id}}' class="custom-control-input" id="room-{{room.id}}">
+                      <label class="custom-control-label" for="room-{{room.id}}">{{room.title}}</label>
                     </div>
                   </div>
-                  <div class="mt-2 mb-2 pl-2">
-                    <div class="custom-control custom-checkbox">
-                      <input type="checkbox" class="custom-control-input" id="filter-size-5">
-                      <label class="custom-control-label" for="filter-size-5">X-Large</label>
-                    </div>
-                  </div>
+                {% endfor %}
+                </div>
                   <div class="divider mt-5 mb-5 border-bottom border-secondary"></div>
-                  <h6 class="text-uppercase mt-5 mb-3 font-weight-bold">Price</h6>
+                  <h6 class="text-uppercase mt-5 mb-3 font-weight-bold">Цена</h6>
                   <div class="price-filter-control">
-                    <input type="number" class="form-control w-50 pull-left mb-2" value="50" id="price-min-control">
-                    <input type="number" class="form-control w-50 pull-right" value="150" id="price-max-control">
+                    <input type="number" class="form-control w-50 pull-left mb-2" name = 'number1' value="0" id="price-min-control">
+                    <input type="number" class="form-control w-50 pull-right" name = 'number2' value="150" id="price-max-control">
                   </div>
                   <input id="ex2" type="text" class="slider " value="50,150" data-slider-min="10" data-slider-max="200" data-slider-step="5" data-slider-value="[50,150]" data-value="50,150" style="display: none;">
                   <div class="divider mt-5 mb-5 border-bottom border-secondary"></div>
-                  <a href="#" class="btn btn-lg btn-block btn-primary mt-5">Обновить результат</a>
+                  <button type="submit"    class="btn btn-lg btn-block btn-primary">Обновить результат</button>
                 </div>
-
+             </form>
               </div>
 
             </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const checkboxes = document.querySelectorAll('#manufacturer-checkboxes input[type="checkbox"]');
+  const showAllButton = document.createElement('button');
+  showAllButton.textContent = 'Показать все';
+  showAllButton.setAttribute('type', 'button');
+  showAllButton.classList.add('show-all-button', 'btn', 'btn-link');
+  document.querySelector('#manufacturer-checkboxes').appendChild(showAllButton);
+
+  checkboxes.forEach(function(checkbox, index) {
+    if (index >= 5) {
+      checkbox.style.display = 'none'; // Скрываем чекбоксы после первых пяти
+      checkbox.nextElementSibling.style.display = 'none'; // Скрываем текст чекбоксов
+    }
+  });
+
+  showAllButton.addEventListener('click', function() {
+    checkboxes.forEach(function(checkbox) {
+      checkbox.style.display = 'inline'; // Показываем все чекбоксы
+      checkbox.nextElementSibling.style.display = 'inline'; // Показываем текст чекбоксов
+    });
+    showAllButton.style.display = 'none'; // Скрываем кнопку "Показать все"
+    const hideAllButton = document.createElement('button');
+    hideAllButton.textContent = 'Скрыть';
+    hideAllButton.setAttribute('type', 'button');
+    hideAllButton.classList.add('hide-all-button', 'btn', 'btn-link');
+    document.querySelector('#manufacturer-checkboxes').appendChild(hideAllButton);
+
+    hideAllButton.addEventListener('click', function() {
+      checkboxes.forEach(function(checkbox, index) {
+        if (index >= 5) {
+          checkbox.style.display = 'none';
+          checkbox.nextElementSibling.style.display = 'none';
+        }
+      });
+      hideAllButton.style.display = 'none';
+      showAllButton.style.display = 'inline';
+    });
+  });
+});
+</script>
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Получаем все чекбоксы
+    var checkboxes = document.querySelectorAll('input[type="checkbox"]');
+
+    // При загрузке страницы проверяем наличие сохраненных значений в localStorage
+    checkboxes.forEach(function(checkbox) {
+        var storedValue = localStorage.getItem(checkbox.id);
+        if (storedValue) {
+            checkbox.checked = JSON.parse(storedValue); // Преобразуем строку JSON в булево значение
+        }
+    });
+
+    // Добавляем обработчик события для чекбоксов
+    checkboxes.forEach(function(checkbox) {
+        checkbox.addEventListener('change', function() {
+            localStorage.setItem(this.id, this.checked); // Сохраняем состояние чекбокса в localStorage
+        });
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const checkboxes = document.querySelectorAll('#draw-checkboxes input[type="checkbox"]');
+  const showAllButton = document.createElement('button');
+  showAllButton.textContent = 'Показать все';
+  showAllButton.setAttribute('type', 'button');
+  showAllButton.classList.add('show-all-button', 'btn', 'btn-link');
+  document.querySelector('#draw-checkboxes').appendChild(showAllButton);
+
+  checkboxes.forEach(function(checkbox, index) {
+    if (index >= 5) {
+      checkbox.style.display = 'none'; // Скрываем чекбоксы после первых пяти
+      checkbox.nextElementSibling.style.display = 'none'; // Скрываем текст чекбоксов
+    }
+  });
+
+  showAllButton.addEventListener('click', function() {
+    checkboxes.forEach(function(checkbox) {
+      checkbox.style.display = 'inline'; // Показываем все чекбоксы
+      checkbox.nextElementSibling.style.display = 'inline'; // Показываем текст чекбоксов
+    });
+    showAllButton.style.display = 'none'; // Скрываем кнопку "Показать все"
+    const hideAllButton = document.createElement('button');
+    hideAllButton.textContent = 'Скрыть';
+    hideAllButton.setAttribute('type', 'button');
+    hideAllButton.classList.add('hide-all-button', 'btn', 'btn-link');
+    document.querySelector('#draw-checkboxes').appendChild(hideAllButton);
+
+    hideAllButton.addEventListener('click', function() {
+      checkboxes.forEach(function(checkbox, index) {
+        if (index >= 5) {
+          checkbox.style.display = 'none';
+          checkbox.nextElementSibling.style.display = 'none';
+        }
+      });
+      hideAllButton.style.display = 'none';
+      showAllButton.style.display = 'inline';
+    });
+  });
+});
+</script>
+
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const checkboxes = document.querySelectorAll('#color-checkboxes input[type="checkbox"]');
+  const showAllButton = document.createElement('button');
+  showAllButton.textContent = 'Показать все';
+  showAllButton.setAttribute('type', 'button');
+  showAllButton.classList.add('show-all-button', 'btn', 'btn-link');
+  document.querySelector('#color-checkboxes').appendChild(showAllButton);
+
+  checkboxes.forEach(function(checkbox, index) {
+    if (index >= 5) {
+      checkbox.style.display = 'none'; // Скрываем чекбоксы после первых пяти
+      checkbox.nextElementSibling.style.display = 'none'; // Скрываем текст чекбоксов
+    }
+  });
+
+  showAllButton.addEventListener('click', function() {
+    checkboxes.forEach(function(checkbox) {
+      checkbox.style.display = 'inline'; // Показываем все чекбоксы
+      checkbox.nextElementSibling.style.display = 'inline'; // Показываем текст чекбоксов
+    });
+    showAllButton.style.display = 'none'; // Скрываем кнопку "Показать все"
+    const hideAllButton = document.createElement('button');
+    hideAllButton.textContent = 'Скрыть';
+    hideAllButton.setAttribute('type', 'button');
+    hideAllButton.classList.add('hide-all-button', 'btn', 'btn-link');
+    document.querySelector('#color-checkboxes').appendChild(hideAllButton);
+
+    hideAllButton.addEventListener('click', function() {
+      checkboxes.forEach(function(checkbox, index) {
+        if (index >= 5) {
+          checkbox.style.display = 'none';
+          checkbox.nextElementSibling.style.display = 'none';
+        }
+      });
+      hideAllButton.style.display = 'none';
+      showAllButton.style.display = 'inline';
+    });
+  });
+});
+</script>
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const checkboxes = document.querySelectorAll('#room-checkboxes input[type="checkbox"]');
+  const showAllButton = document.createElement('button');
+  showAllButton.textContent = 'Показать все';
+  showAllButton.setAttribute('type', 'button');
+  showAllButton.classList.add('show-all-button', 'btn', 'btn-link');
+  document.querySelector('#room-checkboxes').appendChild(showAllButton);
+
+  checkboxes.forEach(function(checkbox, index) {
+    if (index >= 5) {
+      checkbox.style.display = 'none'; // Скрываем чекбоксы после первых пяти
+      checkbox.nextElementSibling.style.display = 'none'; // Скрываем текст чекбоксов
+    }
+  });
+
+  showAllButton.addEventListener('click', function() {
+    checkboxes.forEach(function(checkbox) {
+      checkbox.style.display = 'inline'; // Показываем все чекбоксы
+      checkbox.nextElementSibling.style.display = 'inline'; // Показываем текст чекбоксов
+    });
+    showAllButton.style.display = 'none'; // Скрываем кнопку "Показать все"
+    const hideAllButton = document.createElement('button');
+    hideAllButton.textContent = 'Скрыть';
+    hideAllButton.setAttribute('type', 'button');
+    hideAllButton.classList.add('hide-all-button', 'btn', 'btn-link');
+    document.querySelector('#room-checkboxes').appendChild(hideAllButton);
+
+    hideAllButton.addEventListener('click', function() {
+      checkboxes.forEach(function(checkbox, index) {
+        if (index >= 5) {
+          checkbox.style.display = 'none';
+          checkbox.nextElementSibling.style.display = 'none';
+        }
+      });
+      hideAllButton.style.display = 'none';
+      showAllButton.style.display = 'inline';
+    });
+  });
+});
+</script>
 
 
 <script src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
     <!-- Latest compiled JavaScript -->
 <script src="{% static 'js/bootstrap.min.js' %}"></script>
-<!-- Like Post Ajax -->
+
+
+
+<!-- Add product  Post Ajax -->
 <script>
         $(document).ready(function () {
             $(".addproductincart").click(function (event) {
@@ -209,5 +401,7 @@
             });
         });
 </script>
+
+
 </body>
 </html>

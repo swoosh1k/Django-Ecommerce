@@ -13,6 +13,9 @@ urlpatterns = [
     path('create_order/', create_order, name = 'create_order'),
     path('add_product_in_cart/', add_product_in_cart, name = 'add_product_in_cart'),
     path('update_cart/', update_cart, name='update_cart'),
+    path('about_us/', about_us, name = 'about_us'),
+    path('generate/', generate, name= 'generate'),
+    path('filter-products/', filter_products, name = 'filter-products')
 ]
 
 

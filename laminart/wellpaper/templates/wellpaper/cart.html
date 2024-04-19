@@ -27,7 +27,6 @@
           <li><a href="#" class="nav-link px-2 text-secondary">Город Минск, Тимирязева 128/1</a></li>
           <li><a href="{% url 'index' %}" class="nav-link px-2 text-white">Главная</a></li>
           <li><a href="{% url 'about_us' %}" class="nav-link px-2 text-white">О нас</a></li>
-          <li><a href="#" class="nav-link px-2 text-white">Профиль</a></li>
         </ul>
         <form class="d-flex" action = '{% url "cart" %}' method = 'GET'>
             <button type="submit" class="btn btn-dark">Корзина <i class="fa-solid fa-cart-shopping"><span id = 'products_in_cart_all'>{{products_in_cart}}</span></i></button>
@@ -72,7 +71,7 @@
 								 							<div class="product-info">
 									 							<div>Артикль: <span class="value">{{cart.product.articl}}</span></div>
 									 							<div>Размер: <span class="value">{{cart.product.size.title}}</span></div>
-									 							<div>Брэнд: <span class="value">{{cart.product.brand}}</span></div>
+									 							<div>Брэнд: <span class="value">{{cart.product.manufacturer.title}}</span></div>
 									 						</div>
 									 					</div>
 							 						</div>

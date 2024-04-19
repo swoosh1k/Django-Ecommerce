@@ -15,7 +15,9 @@ urlpatterns = [
     path('update_cart/', update_cart, name='update_cart'),
     path('about_us/', about_us, name = 'about_us'),
     path('generate/', generate, name= 'generate'),
-    path('filter-products/', filter_products, name = 'filter-products')
+    path('filter-products/', filter_products, name = 'filter-products'),
+    path('parsing/', parsing, name = 'parsing'),
+    path('product_detail/<int:pk>/', product_detail, name = 'product_detail' )
 ]
 
 

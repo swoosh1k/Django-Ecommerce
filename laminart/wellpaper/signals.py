@@ -3,7 +3,7 @@ import json
 from django.db.models.signals import post_delete, post_save
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
-from .models import Order
+from .models import Order, Product
 import telebot
 
 @receiver(post_save, sender = Order)
@@ -15,7 +15,9 @@ def print_telebot(sender,  instance, created, **kwargs):
             user_message = instance.message
             cart_data = json.loads(instance.cart_data)
             order = ''
+            total_summ = 0
             for key in cart_data:
                 order += f"{cart_data[key]['product']} , количество: {cart_data[key]['quantity']} \n"
-            message = f'Заказ обоев: номер телефона: {number} \nemail: {email} \n Сообщение: {user_message} \n Заказ: {order} '
+                total_summ += (int(cart_data[key]['quantity']) * int(Product.objects.filter(title = cart_data[key]['product']).first().price))
+            message = f'Заказ обоев: номер телефона: {number} \nemail: {email} \nСообщение: {user_message} \nЗаказ: {order} \n Общая сумма заказа: {total_summ} '
             bot.send_message(545589900, message)

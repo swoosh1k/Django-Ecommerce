@@ -42,7 +42,16 @@ class Room(models.Model):
         verbose_name = 'Room'
         verbose_name_plural = 'Rooms'
 
+class Type(models.Model):
+    type = models.CharField(max_length=150)
 
+
+    def __str__(self):
+        return f'Тип: {self.type}'
+
+    class Meta:
+        verbose_name = 'Тип обоев'
+        verbose_name_plural = 'Типы обоев'
 
 class Color(models.Model):
     color = models.CharField(max_length=150)
@@ -55,16 +64,17 @@ class Color(models.Model):
 
 class Product(models.Model):
     price = models.DecimalField('Цена', max_digits = 6, decimal_places = 2, null = True)
-    brand = models.CharField('Брэнд', max_length=150)
+    available = models.BooleanField(default = True)
     title = models.CharField('название', max_length=150)
-    image = models.ImageField(upload_to='wellpapers/')
+    image = models.ImageField(upload_to='media/wellpapers/')
     size = models.ForeignKey(Size, on_delete=models.PROTECT)
     manufacturer = models.ForeignKey(Manufacturer, on_delete=models.CASCADE)
-    drawing = models.ForeignKey(Drawing, on_delete = models.CASCADE)
+    drawing = models.ManyToManyField(Drawing)
     room = models.ManyToManyField(Room)
     color = models.ManyToManyField(Color)
+    light = models.BooleanField(default = False)
+    type = models.ForeignKey(Type, on_delete = models.PROTECT)
     articl  = models.CharField('артикуль', max_length=150)
-    quantity = models.IntegerField('количество', default = 0)
     slug = models.SlugField('URL')
 
 
@@ -89,7 +99,8 @@ class User(AbstractUser):
         verbose_name_plural = 'Users'
 
 class Cart(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'user_carts')
+    session_id = models.CharField(max_length=150)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'user_carts', blank = True, null = True)
     product = models.ForeignKey(Product, on_delete = models.PROTECT, related_name = 'product_carts')
     quantity = models.SmallIntegerField()
 
@@ -106,7 +117,7 @@ class Cart(models.Model):
 
 class Order(models.Model):
     cart_data = models.JSONField()
-    user = models.ForeignKey(User, on_delete = models.CASCADE, related_name='orders')
+    user = models.ForeignKey(User, on_delete = models.CASCADE, related_name='orders', blank = True, null = True)
     number = models.CharField('номер телефона', max_length=30)
     email = models.EmailField('email')
     message = models.CharField('сообщение', null = True, blank = True, max_length=30)

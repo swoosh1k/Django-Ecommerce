@@ -24,7 +24,6 @@
           <li><a href="#" class="nav-link px-2 text-secondary">Город Минск, Тимирязева 128/1</a></li>
           <li><a href="{% url 'index' %}" class="nav-link px-2 text-white">Главная</a></li>
           <li><a href="{% url 'about_us' %}" class="nav-link px-2 text-white">О нас</a></li>
-          <li><a href="#" class="nav-link px-2 text-white">Профиль</a></li>
         </ul>
         <form class="d-flex" action = '{% url "cart" %}' method = 'GET'>
             <button type="submit" class="btn btn-dark">Корзина <i class="fa-solid fa-cart-shopping"><span id = 'products_in_cart'>{{products_in_cart}}</span></i></button>
@@ -46,16 +45,16 @@
                      {% if  not products %}
                         <h1>По вашему фильтру ничего не найдено</h1>
                      {% endif %}
-                    {% for product in products %}
+                    {% for product in page_obj %}
                       <div class="col-6 col-md-6 col-lg-4 mb-3">
                           <div class="card h-100">
                             <!-- Product image-->
-                            <img class="card-img-top" src="{{product.image.url}}" alt="...">
+                            <a href = '{% url "product_detail" product.id %}' style="text-decoration: none; color: inherit; cursor: pointer;"><img class="card-img-top" src="{{product.image.url}}" alt="..."></a>
                             <!-- Product details-->
                             <div class="card-body p-4">
                                 <div class="text-center">
                                     <!-- Product name-->
-                                    <h5 class="fw-bolder">{{product.title}}</h5>
+                                    <a href = '{% url "product_detail" product.id %}' style="text-decoration: none; color: inherit; cursor: pointer;"><h5 class="fw-bolder">{{product.title}}</h5></a>
                                      <h5 class="card-price small text-warning">
                               <i>
                                артикль: {{product.articl}}</i>
@@ -65,7 +64,7 @@
                                 </div>
                             </div>
                             <!-- Product actions-->
-                            <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                            <div class="card-footer p-4 pt-0 border-to  p-0 bg-transparent">
                                 <div class="text-center"><a class="btn btn-outline-dark mt-auto addproductincart" id = '{{ product.pk }}' data-url  = '{% url "add_product_in_cart" %}'><span  id = "btn_textt{{product.pk}}">{% if product.id not in user_products %}Добавить в корзину{% else %}Товар уже в корзине!{% endif %}</span></a></div>
                             </div>
                           </div>
@@ -74,20 +73,25 @@
                     </div>
                     <div class="row sorting mb-5 mt-5">
                       <div class="col-12">
-                        <a class="btn btn-light">
-                          <i class="fas fa-arrow-up mr-2"></i> Back to top</a>
+                        <a class="btn btn-light" href = '#'>
+                          <i class="fas fa-arrow-up mr-2"></i>Вернуться назад</a>
                         <div class="btn-group float-md-right ml-3">
-                          <button type="button" class="btn btn-lg btn-light"><span class="fa fa-arrow-left"></span> </button>
-                          <button type="button" class="btn btn-lg btn-light"> <span class="fa fa-arrow-right"></span> </button>
+                            {% if page_obj.has_previous %}
+                          <button type="button" onclick="window.location.href='?page={{ page_obj.previous_page_number }}'" class="btn btn-lg btn-light"><span class="fa fa-arrow-left"></span> </button>
+                            {% endif %}
+                          {% for p in page_obj.paginator.page_range %}
+                            {% if page_obj.number == p %}
+                                 <button type="button" class="btn btn-lg btn-primary"><span>{{p}}</span> </button>
+                            {% else %}
+                                <button type="button" onclick="window.location.href='?page={{ p }}'" class="btn btn-lg btn-light"><span>{{ p }}</span></button>
+                            {% endif %}
+                          {% endfor %}
+                            {% if page_obj.has_next %}
+                          <button type="button" onclick="window.location.href='?page={{ page_obj.next_page_number }}'" class="btn btn-lg btn-light"> <span class="fa fa-arrow-right"></span> </button>
+                            {% endif %}
                         </div>
                         <div class="dropdown float-md-right">
-                          <label class="mr-2">View:</label>
-                          <a class="btn btn-light btn-lg dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">12 <span class="caret"></span></a>
-                          <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                            <a class="dropdown-item" href="#">12</a>
-                            <a class="dropdown-item" href="#">24</a>
-                            <a class="dropdown-item" href="#">48</a>
-                            <a class="dropdown-item" href="#">96</a>
+                        <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                           </div>
                         </div>
                       </div>
@@ -101,7 +105,7 @@
                   <div class="mt-2 mb-2 pl-2">
                     <div class="custom-control custom-checkbox">
                       <input type="checkbox" name = 'size' value = '{{size.id}}' class="custom-control-input" id="category-{{size.id}}">
-                      <label class="custom-control-label" for="category-{{size.id}}">{{size.title}} м</label>
+                      <label class="custom-control-label" for="category-{{size.id}}">{{size.title}}</label>
                     </div>
                   </div>
                 {% endfor %}
@@ -156,8 +160,8 @@
                   <div class="divider mt-5 mb-5 border-bottom border-secondary"></div>
                   <h6 class="text-uppercase mt-5 mb-3 font-weight-bold">Цена</h6>
                   <div class="price-filter-control">
-                    <input type="number" class="form-control w-50 pull-left mb-2" name = 'number1' value="0" id="price-min-control">
-                    <input type="number" class="form-control w-50 pull-right" name = 'number2' value="150" id="price-max-control">
+                    <input type="number" class="form-control w-50 pull-left mb-2" name = 'numberik1' value = "0" id="price-min-control">
+                    <input type="number" class="form-control w-50 pull-right" name = 'numberik2' value = "150" id="price-max-control">
                   </div>
                   <input id="ex2" type="text" class="slider " value="50,150" data-slider-min="10" data-slider-max="200" data-slider-step="5" data-slider-value="[50,150]" data-value="50,150" style="display: none;">
                   <div class="divider mt-5 mb-5 border-bottom border-secondary"></div>
@@ -391,8 +395,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     success: function (response) {
                                $('#btn_textt' + product_id).text(response['info']);
                                 $('#products_in_cart').text(response['products_in_cart']);
+                                _this.find('a').removeClass('btn btn-outline-dark mt-auto');
+                                _this.find('a').addClass('btn btn-dark btn-rounded mr-1');
                       console.log(response)
-
                     },
                     error: function (rs, e) {
                         console.log(rs.response)

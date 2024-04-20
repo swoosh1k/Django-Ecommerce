@@ -14,12 +14,16 @@ import requests
 from bs4 import BeautifulSoup
 from .models import *
 from .forms import *
-
 def index(request):
-    user = request.user
+    if request.user.is_authenticated:
+        user_carts = Cart.objects.filter(user=request.user)
+    else:
+        if not request.session.session_key:
+            request.session.create()
+        user_carts = Cart.objects.filter(session_id = request.session.session_key)
     products = Product.objects.all()
-    products_count_in_cart = sum([cart.quantity for cart in Cart.objects.filter(user = request.user)])
-    user_products = [cart.product.id for cart in Cart.objects.filter(user = request.user)]
+    products_count_in_cart = sum([cart.quantity for cart in user_carts])
+    user_products = [cart.product.id for cart in user_carts]
     products_on_page = products.count()
     sizes = Size.objects.all()
     manufacturers = Manufacturer.objects.all()
@@ -29,7 +33,7 @@ def index(request):
     paginator = Paginator(products, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    context = {'products': products, 'user': user, 'title': 'Главная страница', 'user_products': user_products, 'products_in_cart': products_count_in_cart, 'products_on_page': products_on_page, 'sizes': sizes, 'manufacturers': manufacturers, 'drawings': drawings, 'rooms': rooms, 'colors': colors, 'page_obj': page_obj, }
+    context = {'products': products, 'title': 'Главная страница', 'user_products': user_products, 'products_in_cart': products_count_in_cart, 'products_on_page': products_on_page, 'sizes': sizes, 'manufacturers': manufacturers, 'drawings': drawings, 'rooms': rooms, 'colors': colors, 'page_obj': page_obj, }
     return render(request, 'wellpaper/index.html', context = context )
 
 
@@ -58,12 +62,14 @@ class UserRegister(CreateView):
 
 
 
-
 def user_cart(request):
-    carts = Cart.objects.filter(user = request.user)
-    products_in_cart = sum([cart.quantity for cart in carts])
-    all_cart_sum = sum([cart.total_sum() for cart in carts])
-    context = {'carts': carts, 'products_in_cart': products_in_cart, 'all_cart_sum': all_cart_sum}
+    if request.user.is_authenticated:
+        user_carts = Cart.objects.filter(user = request.user)
+    else:
+        user_carts = Cart.objects.filter(session_id = request.session.session_key)
+    products_in_cart = sum([cart.quantity for cart in user_carts])
+    all_cart_sum = sum([cart.total_sum() for cart in user_carts])
+    context = {'carts': user_carts, 'products_in_cart': products_in_cart, 'all_cart_sum': all_cart_sum}
     return render(request, 'wellpaper/cart.html', context = context)
 
 
@@ -94,16 +100,30 @@ def delete_item(request, pk):
 
 
 def add_product_in_cart(request):
+    print(request.session.session_key)
     product = get_object_or_404(Product, id = request.POST.get('product_id'))
-    user_products = [cart.product.id for cart in Cart.objects.filter(user = request.user)]
+    if request.user.is_authenticated:
+        user_products = [cart.product.id for cart in Cart.objects.filter(user = request.user)]
+    else:
+        user_products = [cart.product.id for cart in Cart.objects.filter(session_id = request.session.session_key)]
     if product.id not in user_products:
-        Cart.objects.create(user = request.user, product = product, quantity = 1)
+        if request.user.is_authenticated:
+            Cart.objects.create(user = request.user, product = product, quantity = 1)
+        else:
+            Cart.objects.create(session_id = request.session.session_key, quantity = 1, product = product)
         info = 'Товар уже в корзине!'
     else:
-        cart = Cart.objects.get(product = product)
-        cart.delete()
+        if request.user.is_authenticated:
+            cart = Cart.objects.get(product = product, user = request.user)
+            cart.delete()
+        else:
+            cart = Cart.objects.get(session_id = request.session.session_key, product = product)
+            cart.delete()
         info = 'Добавить в корзину'
-    products_in_cart = sum([cart.quantity for cart in Cart.objects.filter(user = request.user)])
+    if request.user.is_authenticated:
+        products_in_cart = sum([cart.quantity for cart in Cart.objects.filter(user = request.user)])
+    else:
+        products_in_cart= sum([cart.quantity for cart in Cart.objects.filter(session_id = request.session.session_key)])
     return JsonResponse({'products_in_cart': products_in_cart, 'info': info})
 
 
@@ -111,13 +131,20 @@ def add_product_in_cart(request):
 
 def update_cart(request):
     product = Product.objects.get(id = request.POST.get('product_id'))
-    cart = Cart.objects.get(product_id = product.id)
+    if request.user.is_authenticated:
+        cart = Cart.objects.get(product_id = product.id, user = request.user)
+    else:
+        cart = Cart.objects.get(product_id = product.id, session_id = request.session.session_key)
     cart.quantity = int(request.POST.get('quantity'))
     cart.save()
     cart_summ = cart.total_sum()
-    products_in_cart = sum([cart.quantity for cart in Cart.objects.filter(user = request.user)])
-    products_in_cart_all = sum([cart.quantity for cart in Cart.objects.filter(user = request.user)])
-    total_summ = sum([cart.total_sum() for cart in Cart.objects.filter(user = request.user)])
+    if request.user.is_authenticated:
+        user_carts = Cart.objects.filter(user = request.user)
+    else:
+        user_carts = Cart.objects.filter(session_id = request.session.session_key)
+    products_in_cart = sum([cart.quantity for cart in user_carts])
+    products_in_cart_all = sum([cart.quantity for cart in user_carts])
+    total_summ = sum([cart.total_sum() for cart in user_carts])
     return JsonResponse({'cart_summ': cart_summ, 'total_summ': total_summ, 'products_in_cart': products_in_cart, 'products_in_cart_all':products_in_cart_all })
 
 
@@ -143,9 +170,13 @@ def filter_products(request):
     numberik2 = request.GET.get('numberik2', '150')
     min_number = Decimal(numberik1)
     max_number = Decimal(numberik2)
+    if request.user.is_authenticated:
+        user_carts = Cart.objects.filter(user=request.user)
+    else:
+        user_carts = Cart.objects.filter(session_id=request.session.session_key)
     products = list(set(Product.objects.filter(price__gte = min_number, price__lte = max_number, color__in = color, drawing__in = draw, room__in = room, size__in = size, manufacturer__in = manufacturer )))
-    products_count_in_cart = sum([cart.quantity for cart in Cart.objects.filter(user=request.user)])
-    user_products = [cart.product.id for cart in Cart.objects.filter(user=request.user)]
+    products_count_in_cart = sum([cart.quantity for cart in user_carts])
+    user_products = [cart.product.id for cart in user_carts]
     products_on_page = len(products)
     manufacturers = Manufacturer.objects.all()
     drawings = Drawing.objects.all()
@@ -169,7 +200,11 @@ def filter_products(request):
 
 
 def about_us(request):
-    products_in_cart = sum([cart.quantity for cart in Cart.objects.filter(user = request.user)])
+    if request.user.is_authenticated:
+        user_carts = Cart.objects.filter(user = request.user)
+    else:
+        user_carts = Cart.objects.filter(session_id = request.session.session_key)
+    products_in_cart = sum([cart.quantity for cart in user_carts])
     context = {'title': 'О нас', 'products_in_cart': products_in_cart}
     return render(request, 'wellpaper/aboutus.html', context = context)
 
@@ -211,12 +246,12 @@ def generate(request):
 
 def parsing(request):
     if request.user.is_superuser:
-        page_number = 2
-        for page in range(1):
+        page_number = 6
+        for page in range(1, 3):
             if page == 0:
                 response = requests.get('https://imperia-oboev.by/catalog/flizelinovye-oboi').text
             else:
-                response = requests.get(f'https://imperia-oboev.by/catalog/flizelinovye-oboi?page={page_number}')
+                response = requests.get(f'https://imperia-oboev.by/catalog/flizelinovye-oboi?page={page_number}').text
             soap = BeautifulSoup(response, 'html.parser')
             all_items = soap.find_all('article', class_='card')
             for item in all_items:
@@ -277,7 +312,7 @@ def parsing(request):
                     color, _ = Color.objects.get_or_create(color=color_name)
                     product.color.add(color)
                 product.save()
-                page_number += 1
+            page_number += 1
         return redirect('index')
     else:
         return redirect('index')
@@ -285,8 +320,12 @@ def parsing(request):
 
 
 def product_detail(request, pk):
-    products_in_cart = sum([cart.quantity for cart in Cart.objects.filter(user=request.user)])
+    if request.user.is_authenticated:
+        user_carts = Cart.objects.filter(user = request.user)
+    else:
+        user_carts = Cart.objects.filter(session_id = request.session.session_key)
+    products_in_cart = sum([cart.quantity for cart in user_carts])
     product = Product.objects.get(id = pk)
-    user_products = [cart.product.id for cart in Cart.objects.filter(user = request.user)]
+    user_products = [cart.product.id for cart in user_carts]
     context = {'product': product, 'products_in_cart':products_in_cart, 'user_products': user_products }
     return render(request, 'wellpaper/product_detail.html', context = context)

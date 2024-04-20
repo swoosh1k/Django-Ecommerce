@@ -99,13 +99,14 @@ class User(AbstractUser):
         verbose_name_plural = 'Users'
 
 class Cart(models.Model):
-    session_id = models.CharField(max_length=150)
+    session_id = models.CharField(max_length=150, null = True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name = 'user_carts', blank = True, null = True)
     product = models.ForeignKey(Product, on_delete = models.PROTECT, related_name = 'product_carts')
     quantity = models.SmallIntegerField()
 
     def __str__(self):
-        return f'Cart {self.id} user: {self.user.username} product {self.product.title}'
+
+        return f'Cart {self.id} user:  product {self.product.title}'
 
     def total_sum(self):
         return self.quantity * self.product.price

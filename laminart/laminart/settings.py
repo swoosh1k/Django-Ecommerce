@@ -129,6 +129,6 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 
 try:
-    from.local_settinngs import *
+    from.local_settings import *
 except ImportError:
     from .prod_settings import *

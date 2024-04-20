@@ -2,7 +2,7 @@
 pycache/
 *.py[cod]
 *$py.class
-
+django_ecom_venv/
 # C extensions
 *.so
 # Distribution / packaging
@@ -26,7 +26,8 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
-
+prod_settings.py
+local_settings.py
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
